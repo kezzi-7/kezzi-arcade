@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kezzi Arcade - Neon Web Gaming Hub</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            900: '#070b19',
+                            800: '#0d1326',
+                            700: '#172038',
+                            600: '#263354',
+                            accent: '#06b6d4',
+                            neon: '#10b981',
+                            pink: '#ec4899',
+                            purple: '#8b5cf6'
+                        }
+                    },
+                    animation: {
+                        'pulse-fast': 'pulse 0.8s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 3s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-6px)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Inter & Orbitron -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@600;800;900&display=swap" rel="stylesheet">
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #070b19;
+            color: #f3f4f6;
+            overflow-x: hidden;
+        }
+        .arcade-title {
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 2px;
+        }
+        .glass-panel {
+            background: rgba(13, 19, 38, 0.75);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glow-cyan {
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.25);
+        }
+        .glow-pink {
+            box-shadow: 0 0 30px rgba(236, 72, 153, 0.25);
+        }
+        .glow-purple {
+            box-shadow: 0 0 30px rgba(139, 92, 246, 0.25);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-cyber-900 to-black">
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed top-5 right-5 z-50 transform translate-x-full transition-all duration-300 bg-slate-800 border border-cyan-500/40 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3">
+        <i id="toast-icon" class="fa-solid fa-circle-info text-cyan-400 text-lg"></i>
+        <div>
+            <h4 id="toast-title" class="font-bold text-sm">Notification</h4>
+            <p id="toast-msg" class="text-xs text-slate-300">Message goes here</p>
+        </div>
+    </div>
+
+    <!-- Header Navigation -->
+    <header class="w-full max-w-6xl mx-auto px-4 py-5 flex flex-wrap justify-between items-center border-b border-slate-800/80">
+        <div class="flex items-center gap-3 cursor-pointer" onclick="returnToMenu()">
+            <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-cyan-500 via-purple-600 to-pink-500 flex items-center justify-center shadow-lg glow-cyan">
+                <i class="fa-solid fa-gamepad text-white text-xl animate-pulse"></i>
+            </div>
+            <div>
+                <h1 class="arcade-title text-xl font-black bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-500 bg-clip-text text-transparent">KEZZI ARCADE</h1>
+                <p class="text-[11px] text-slate-400 font-medium tracking-wide">Next-Gen Neon Web Hub</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3 mt-3 sm:mt-0">
+            <div class="glass-panel px-3.5 py-2 rounded-xl flex items-center gap-2 text-xs font-medium text-cyan-300 border border-cyan-500/20">
+                <i class="fa-solid fa-fire text-amber-400"></i>
+                <span>Streak: <strong id="global-streak" class="text-white">0</strong></span>
+            </div>
+            <button onclick="openStatsModal()" class="glass-panel px-3.5 py-2 rounded-xl flex items-center gap-2 text-xs font-medium hover:bg-slate-800 transition text-slate-200 border border-slate-700/60">
+                <i class="fa-solid fa-trophy text-amber-400"></i>
+                <span>Records</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container Area -->
+    <main class="flex-grow flex flex-col items-center justify-center px-4 py-8 max-w-5xl mx-auto w-full">
+
+        <!-- VIEW 1: GAME MENU / SELECTOR -->
+        <div id="view-menu" class="w-full space-y-8">
+            <!-- Hero Banner -->
+            <div class="text-center space-y-3 py-4">
+                <span class="inline-block px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-bold uppercase tracking-widest shadow-sm">
+                    Welcome to Kezzi Arcade v2.6
+                </span>
+                <h2 class="arcade-title text-3xl sm:text-5xl font-black text-white tracking-wide">
+                    CHOOSE YOUR <span class="bg-gradient-to-r from-cyan-400 to-pink-500 bg-clip-text text-transparent">MODULE</span>
+                </h2>
+                <p class="text-slate-400 max-w-xl mx-auto text-sm sm:text-base">
+                    Test your memory recall, lightning reaction speeds, and cognitive color-matching reflexes in high-performance cyber arenas.
+                </p>
+            </div>
+
+            <!-- Game Cards Grid (3 Games) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                <!-- Memory Matrix -->
+                <div class="glass-panel rounded-2xl p-6 relative overflow-hidden group hover:border-cyan-500/50 transition-all duration-300 flex flex-col justify-between">
+                    <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-cyan-500/10 rounded-full blur-2xl group-hover:bg-cyan-500/20 transition"></div>
+                    <div>
+                        <div class="w-12 h-12 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400 text-xl mb-4 shadow-inner">
+                            <i class="fa-solid fa-brain"></i>
+                        </div>
+                        <span class="text-[10px] font-bold text-cyan-400 uppercase tracking-widest">Module 01</span>
+                        <h3 class="text-lg font-bold text-white mt-1">Memory Matrix</h3>
+                        <p class="text-slate-400 text-xs sm:text-sm mt-2">
+                            Memorize the flashing neon sequence and repeat it. Each level adds a new step to the pattern!
+                        </p>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-800 flex items-center justify-between">
+                        <span class="text-[11px] text-slate-400">High: <strong id="menu-mm-score" class="text-cyan-400 font-mono">0</strong></span>
+                        <button type="button" onclick="startMemoryGame()" class="relative z-20 px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold text-xs shadow-lg shadow-cyan-500/25 hover:opacity-90 transition active:scale-95 flex items-center gap-1.5 cursor-pointer">
+                            <span>Play</span>
+                            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Reflex Tap -->
+                <div class="glass-panel rounded-2xl p-6 relative overflow-hidden group hover:border-pink-500/50 transition-all duration-300 flex flex-col justify-between">
+                    <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-pink-500/10 rounded-full blur-2xl group-hover:bg-pink-500/20 transition"></div>
+                    <div>
+                        <div class="w-12 h-12 rounded-xl bg-pink-500/20 border border-pink-500/40 flex items-center justify-center text-pink-400 text-xl mb-4 shadow-inner">
+                            <i class="fa-solid fa-bolt"></i>
+                        </div>
+                        <span class="text-[10px] font-bold text-pink-400 uppercase tracking-widest">Module 02</span>
+                        <h3 class="text-lg font-bold text-white mt-1">Reflex Tap</h3>
+                        <p class="text-slate-400 text-xs sm:text-sm mt-2">
+                            Wait for the emerald signal to flash, then tap instantly. Test your millisecond reaction limits.
+                        </p>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-800 flex items-center justify-between">
+                        <span class="text-[11px] text-slate-400">Best: <strong id="menu-rt-score" class="text-pink-400 font-mono">-- ms</strong></span>
+                        <button type="button" onclick="startReflexGame()" class="relative z-20 px-4 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold text-xs shadow-lg shadow-pink-500/25 hover:opacity-90 transition active:scale-95 flex items-center gap-1.5 cursor-pointer">
+                            <span>Play</span>
+                            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Color Matcher -->
+                <div class="glass-panel rounded-2xl p-6 relative overflow-hidden group hover:border-purple-500/50 transition-all duration-300 flex flex-col justify-between">
+                    <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-purple-500/10 rounded-full blur-2xl group-hover:bg-purple-500/20 transition"></div>
+                    <div>
+                        <div class="w-12 h-12 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400 text-xl mb-4 shadow-inner">
+                            <i class="fa-solid fa-palette"></i>
+                        </div>
+                        <span class="text-[10px] font-bold text-purple-400 uppercase tracking-widest">Module 03</span>
+                        <h3 class="text-lg font-bold text-white mt-1">Color Matcher</h3>
+                        <p class="text-slate-400 text-xs sm:text-sm mt-2">
+                            Does the text color match the word name? Decide quickly before the timer bar runs out!
+                        </p>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-800 flex items-center justify-between">
+                        <span class="text-[11px] text-slate-400">High: <strong id="menu-cm-score" class="text-purple-400 font-mono">0</strong></span>
+                        <button type="button" onclick="startColorGame()" class="relative z-20 px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold text-xs shadow-lg shadow-purple-500/25 hover:opacity-90 transition active:scale-95 flex items-center gap-1.5 cursor-pointer">
+                            <span>Play</span>
+                            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 2: MEMORY MATRIX GAME -->
+        <div id="view-memory-game" class="w-full max-w-xl mx-auto hidden space-y-6">
+            <div class="glass-panel p-4 rounded-2xl flex items-center justify-between">
+                <button onclick="returnToMenu()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-2 transition">
+                    <i class="fa-solid fa-arrow-left"></i> Menu
+                </button>
+                <div class="flex items-center gap-6">
+                    <div class="text-center">
+                        <span class="text-[10px] uppercase text-slate-400 block tracking-wider">Level</span>
+                        <span id="mm-level" class="text-lg font-bold text-cyan-400 font-mono">1</span>
+                    </div>
+                    <div class="text-center">
+                        <span class="text-[10px] uppercase text-slate-400 block tracking-wider">Score</span>
+                        <span id="mm-score" class="text-lg font-bold text-white font-mono">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Game Board Wrapper -->
+            <div class="glass-panel p-8 rounded-3xl flex flex-col items-center justify-center relative glow-cyan">
+                <div id="mm-status" class="text-sm font-medium text-cyan-300 mb-6 h-6 flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span>
+                    <span id="mm-status-text">Watch the sequence...</span>
+                </div>
+
+                <div id="mm-grid" class="grid grid-cols-3 gap-3.5 w-full max-w-[320px] aspect-square"></div>
+
+                <div id="mm-overlay" class="absolute inset-0 bg-cyber-900/85 backdrop-blur-sm rounded-3xl flex flex-col items-center justify-center p-6 text-center z-10">
+                    <h3 class="arcade-title text-2xl font-bold text-white mb-2">MEMORY MATRIX</h3>
+                    <p class="text-slate-400 text-xs max-w-xs mb-6">Memorize the flashing tiles in correct order. Each round adds one more step.</p>
+                    <button onclick="initMemoryRound()" class="px-8 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-sm shadow-xl shadow-cyan-500/30 transition transform hover:-translate-y-0.5">
+                        START CHALLENGE
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 3: REFLEX TAP GAME -->
+        <div id="view-reflex-game" class="w-full max-w-xl mx-auto hidden space-y-6">
+            <div class="glass-panel p-4 rounded-2xl flex items-center justify-between">
+                <button onclick="returnToMenu()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-2 transition">
+                    <i class="fa-solid fa-arrow-left"></i> Menu
+                </button>
+                <div class="flex items-center gap-4 text-xs">
+                    <span class="text-slate-400">Tries: <strong id="rt-tries" class="text-white font-mono">0 / 5</strong></span>
+                    <span class="text-slate-400">Avg: <strong id="rt-avg" class="text-pink-400 font-mono">-- ms</strong></span>
+                </div>
+            </div>
+
+            <div id="rt-target-box" onclick="handleReflexClick()" class="glass-panel h-80 rounded-3xl flex flex-col items-center justify-center cursor-pointer relative overflow-hidden transition-all duration-200 border-2 border-slate-700 select-none">
+                <div id="rt-content" class="text-center p-6 space-y-3 pointer-events-none">
+                    <div id="rt-icon" class="w-16 h-16 rounded-2xl bg-slate-800/80 border border-slate-700 flex items-center justify-center text-slate-400 text-2xl mx-auto mb-2 transition">
+                        <i class="fa-solid fa-hand-pointer"></i>
+                    </div>
+                    <h3 id="rt-title" class="text-xl font-bold text-white">Click to Start Reflex Test</h3>
+                    <p id="rt-subtitle" class="text-xs text-slate-400 max-w-xs">Tap anywhere inside this zone when it turns green. Do not tap early!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 4: COLOR MATCHER GAME -->
+        <div id="view-color-game" class="w-full max-w-xl mx-auto hidden space-y-6">
+            <div class="glass-panel p-4 rounded-2xl flex items-center justify-between">
+                <button onclick="returnToMenu()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-2 transition">
+                    <i class="fa-solid fa-arrow-left"></i> Menu
+                </button>
+                <div class="flex items-center gap-6">
+                    <div class="text-center">
+                        <span class="text-[10px] uppercase text-slate-400 block tracking-wider">Score</span>
+                        <span id="cm-score" class="text-lg font-bold text-purple-400 font-mono">0</span>
+                    </div>
+                    <div class="text-center">
+                        <span class="text-[10px] uppercase text-slate-400 block tracking-wider">Time</span>
+                        <span id="cm-time" class="text-lg font-bold text-white font-mono">15s</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Color Game Wrapper -->
+            <div class="glass-panel p-8 rounded-3xl flex flex-col items-center justify-center relative glow-purple space-y-6">
+                <!-- Timer bar -->
+                <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                    <div id="cm-timer-bar" class="bg-gradient-to-r from-purple-500 to-pink-500 h-full w-full transition-all duration-100"></div>
+                </div>
+
+                <!-- Display Word & Color -->
+                <div class="py-8 text-center">
+                    <p class="text-xs text-slate-400 uppercase tracking-widest mb-2">Does the ink color match the word?</p>
+                    <h2 id="cm-word-display" class="arcade-title text-4xl sm:text-5xl font-black uppercase tracking-wider">RED</h2>
+                </div>
+
+                <!-- Buttons Match / Different -->
+                <div class="grid grid-cols-2 gap-4 w-full max-w-sm">
+                    <button onclick="handleColorChoice(true)" class="py-4 rounded-2xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/50 text-emerald-300 font-bold text-sm transition active:scale-95 flex items-center justify-center gap-2 shadow-lg">
+                        <i class="fa-solid fa-check"></i> YES / MATCH
+                    </button>
+                    <button onclick="handleColorChoice(false)" class="py-4 rounded-2xl bg-pink-500/20 hover:bg-pink-500/30 border border-pink-500/50 text-pink-300 font-bold text-sm transition active:scale-95 flex items-center justify-center gap-2 shadow-lg">
+                        <i class="fa-solid fa-xmark"></i> NO / DIFFERENT
+                    </button>
+                </div>
+
+                <!-- Start Overlay -->
+                <div id="cm-overlay" class="absolute inset-0 bg-cyber-900/85 backdrop-blur-sm rounded-3xl flex flex-col items-center justify-center p-6 text-center z-10">
+                    <div class="w-14 h-14 rounded-2xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400 text-2xl mb-3 shadow-inner">
+                        <i class="fa-solid fa-palette"></i>
+                    </div>
+                    <h3 class="arcade-title text-2xl font-bold text-white mb-2">COLOR MATCHER</h3>
+                    <p class="text-slate-400 text-xs max-w-xs mb-6">Test your brain's Stroop effect! Decide if the displayed word matches its ink color before time runs out.</p>
+                    <button onclick="initColorRound()" class="px-8 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm shadow-xl shadow-purple-500/30 transition transform hover:-translate-y-0.5">
+                
